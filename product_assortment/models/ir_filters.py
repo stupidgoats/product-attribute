@@ -22,6 +22,12 @@ class IrFilters(models.Model):
 
     model_id = fields.Selection(default=lambda x: x._get_default_model())
 
+    partner_ids = fields.Many2many(
+        comodel_name="res.partner",
+        help="This field allow to relate a partner to a domain of products",
+        default=lambda p: p.env.context.get("default_partner_ids"),
+    )
+
     blacklist_product_ids = fields.Many2many(
         comodel_name="product.product", relation="assortment_product_blacklisted"
     )
@@ -37,7 +43,7 @@ class IrFilters(models.Model):
     def _get_eval_domain(self):
         res = super()._get_eval_domain()
 
-        if self.whitelist_product_ids and res:
+        if self.whitelist_product_ids:
             result_domain = [("id", "in", self.whitelist_product_ids.ids)]
             res = expression.OR([result_domain, res])
 
@@ -49,6 +55,10 @@ class IrFilters(models.Model):
 
     def _compute_record_count(self):
         for record in self:
+            if record.model_id not in self.env:
+                # invalid model
+                record.record_count = 0
+                continue
             domain = record._get_eval_domain()
             record.record_count = self.env[record.model_id].search_count(domain)
 
@@ -63,13 +73,13 @@ class IrFilters(models.Model):
 
     def show_products(self):
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Products"),
-            "res_model": "product.product",
-            "domain": self._get_eval_domain(),
-            "view_type": "form",
-            "view_mode": "tree, form",
-            "context": self.env.context,
-            "target": "current",
-        }
+        action = self.env.ref("product.product_normal_action_sell").read([])[0]
+        action.update(
+            {
+                "domain": self._get_eval_domain(),
+                "name": _("Products"),
+                "context": self.env.context,
+                "target": "current",
+            }
+        )
+        return action
