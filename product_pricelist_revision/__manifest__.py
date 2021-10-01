@@ -4,9 +4,9 @@
 {
     "name": "Product Pricelist Revision",
     "summary": "Product Pricelist Revision",
-    "version": "13.0.1.1.0",
+    "version": "13.0.1.2.0",
     "category": "Product",
-    "website": "https://www.github.com/OCA/product-attribute",
+    "website": "https://github.com/OCA/product-attribute",
     "author": "Tecnativa, Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "installable": True,
